@@ -1,4 +1,4 @@
-name: MSBuild
+name: Build Windows release
 
 on:
   push:
@@ -12,33 +12,90 @@ env:
   BUILD_CONFIGURATION: Release
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
     runs-on: windows-2022
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Add MSBuild to PATH
-      uses: microsoft/setup-msbuild@v1.0.2
+      uses: microsoft/setup-msbuild@v2
 
     - name: Restore NuGet packages
-      working-directory: ${{env.GITHUB_WORKSPACE}}
-      run: nuget restore ${{env.SOLUTION_FILE_PATH}}
-      
-    - name: Declare variables
-      shell: bash
+      working-directory: ${{ env.GITHUB_WORKSPACE }}
+      run: nuget restore ${{ env.SOLUTION_FILE_PATH }}
+
+    - name: Prepare TSO Client Fork build
+      shell: pwsh
       run: |
-        export sha_short=$(git rev-parse --short "$GITHUB_SHA")
-        sed -i "s/#TESTTAG#/${sha_short}/g" client/Main.xaml.cs
-        
-    - name: Build
-      working-directory: ${{env.GITHUB_WORKSPACE}}
-      run: msbuild /m /p:Configuration=${{env.BUILD_CONFIGURATION}} /property:Platform=x86 ${{env.SOLUTION_FILE_PATH}}
+        Copy-Item -LiteralPath "client_upstream.swf" -Destination "files/content/client.swf" -Force
+
+        $sourcePath = "client/Main.xaml.cs"
+        $source = [System.IO.File]::ReadAllText($sourcePath)
+        $source = $source.Replace(
+          "https://raw.githubusercontent.com/fedorovvl/tso_client/master/",
+          "https://raw.githubusercontent.com/${{ github.repository }}/master/"
+        )
+        $source = $source.Replace(
+          "https://api.github.com/repos/fedorovvl/tso_client/contents/",
+          "https://api.github.com/repos/${{ github.repository }}/contents/"
+        )
+        $shortSha = $env:GITHUB_SHA.Substring(0, 7)
+        $source = $source.Replace("#TESTTAG#", $shortSha)
+        [System.IO.File]::WriteAllText(
+          $sourcePath,
+          $source,
+          [System.Text.UTF8Encoding]::new($true)
+        )
+
+        if ($source.Contains("fedorovvl/tso_client")) {
+          throw "The build still contains an upstream update URL."
+        }
+
+    - name: Build Windows client
+      working-directory: ${{ env.GITHUB_WORKSPACE }}
+      run: msbuild /m /p:Configuration=${{ env.BUILD_CONFIGURATION }} /property:Platform=x86 ${{ env.SOLUTION_FILE_PATH }}
+
+    - name: Validate executable
+      shell: pwsh
+      run: |
+        $exe = "client/bin/Release/client.exe"
+        if (-not (Test-Path -LiteralPath $exe)) {
+          throw "client.exe was not produced."
+        }
+        if ((Get-Item -LiteralPath $exe).Length -lt 20000000) {
+          throw "client.exe is unexpectedly small; embedded portable content may be missing."
+        }
 
     - uses: actions/upload-artifact@v4
       with:
-       name: client
-       path: client\bin\Release\client.exe
+        name: TSO-Client-Fork-Windows
+        path: client/bin/Release/client.exe
+
+    - name: Publish TSO Client Fork Windows release
+      if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+      shell: pwsh
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        $tag = "v1.5.8.6-fork.1"
+        $asset = "TSO-Client-Fork-Windows.exe"
+        Copy-Item -LiteralPath "client/bin/Release/client.exe" -Destination $asset -Force
+
+        $notes = @"
+        Один файл для Windows: скачайте и запустите без параметров ярлыка и ручной замены SWF.
+
+        В сборку включён client_upstream.swf от 12.08.2026.
+        SHA-256 SWF: 02836f292a2fa07d1758b810dc5f603ebd31824e446023eb0d2b794db8f1b136
+        "@
+
+        gh release view $tag *> $null
+        if ($LASTEXITCODE -eq 0) {
+          gh release upload $tag $asset --clobber
+        }
+        else {
+          gh release create $tag $asset --title "TSO Client Fork — Windows (12.08.2026)" --notes $notes
+        }
