@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <item>
   <version>1.5.8.6</version>
-  <url>https://github.com/fedorovvl/tso_client/releases/tag/v1.5.8.6/</url>
-  <changelog>https://github.com/fedorovvl/tso_client/releases/tag/v1.5.8.6</changelog>
+  <url>https://github.com/alexeivkontakte/tso_client_fork/releases/tag/v1.5.8.6-beta</url>
+  <changelog>https://github.com/alexeivkontakte/tso_client_fork/releases/tag/v1.5.8.6-beta</changelog>
   <mandatory>false</mandatory>
 </item>
-

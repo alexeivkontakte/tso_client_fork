@@ -1,17 +1,23 @@
-![build](https://github.com/fedorovvl/tso_client/actions/workflows/msbuild.yml/badge.svg)
-![build](https://github.com/fedorovvl/tso_client/actions/workflows/apkbuild.yml/badge.svg)
-[![Discord](https://img.shields.io/discord/662700970857332786)](https://discord.gg/9G5X7VhA)
-![GitHub issues](https://img.shields.io/github/issues/fedorovvl/tso_client)
-![GitHub all releases](https://img.shields.io/github/downloads/fedorovvl/tso_client/total)
-![GitHub Repo stars](https://img.shields.io/github/stars/fedorovvl/tso_client?style=social)
-[![Nightly](https://img.shields.io/badge/-latest%20build-1)](https://nightly.link/fedorovvl/tso_client/workflows/msbuild/master/client.zip)
-[![Nightly](https://img.shields.io/badge/-latest%20apk%20build-1)](https://nightly.link/fedorovvl/tso_client/workflows/apkbuild/master/client.zip)
+# TSO Client Fork
 
-The Settlers Online Windows portable client
+Community-maintained fork of the portable Windows client for The Settlers Online.
 
-Check [WIKI](https://github.com/fedorovvl/tso_client/wiki) for detailed info.
+## Windows download
 
-Support:
+Download the current prerelease:
 
-Tinkoff https://www.tinkoff.ru/cf/7qUyCUSg6ju \
-BTC: bc1quulssa0eaqw8umd86sxxlnphtntm0y6vdreplm
+[TSO Client Fork v1.5.8.6-beta — client.exe](https://github.com/alexeivkontakte/tso_client_fork/releases/tag/v1.5.8.6-beta)
+
+The release contains a single Windows executable. Download `client.exe`, start it normally, sign in, and play. No `--skip` argument or manual SWF replacement is required.
+
+### Current hotfix
+
+- Includes the live `client_upstream.swf` from 12 August 2026.
+- SWF SHA-256: `02836f292a2fa07d1758b810dc5f603ebd31824e446023eb0d2b794db8f1b136`.
+- Client update URLs in the Windows build point to this fork.
+
+## Upstream and license
+
+This repository is a fork of [fedorovvl/tso_client](https://github.com/fedorovvl/tso_client). The original authors and contributors retain credit for their work.
+
+Distributed under the [MIT License](LICENSE).

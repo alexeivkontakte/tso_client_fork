@@ -3,6 +3,7 @@ name: Build Windows release
 on:
   push:
     branches: [ "master" ]
+    tags: [ "v*" ]
   pull_request:
     branches: [ "master" ]
   workflow_dispatch:
@@ -75,27 +76,29 @@ jobs:
         name: TSO-Client-Fork-Windows
         path: client/bin/Release/client.exe
 
-    - name: Publish TSO Client Fork Windows release
-      if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    - name: Publish tagged Windows release
+      if: startsWith(github.ref, 'refs/tags/')
       shell: pwsh
       env:
         GH_TOKEN: ${{ github.token }}
       run: |
-        $tag = "v1.5.8.6-fork.1"
-        $asset = "TSO-Client-Fork-Windows.exe"
+        $tag = $env:GITHUB_REF_NAME
+        $asset = "client.exe"
         Copy-Item -LiteralPath "client/bin/Release/client.exe" -Destination $asset -Force
 
         $notes = @"
-        Один файл для Windows: скачайте и запустите без параметров ярлыка и ручной замены SWF.
+        One-file Windows build of TSO Client Fork.
 
-        В сборку включён client_upstream.swf от 12.08.2026.
-        SHA-256 SWF: 02836f292a2fa07d1758b810dc5f603ebd31824e446023eb0d2b794db8f1b136
+        Download client.exe and start it normally. No --skip argument or manual SWF replacement is required.
         "@
 
         gh release view $tag *> $null
         if ($LASTEXITCODE -eq 0) {
           gh release upload $tag $asset --clobber
         }
+        elseif ($tag -match "(?i)(alpha|beta|rc)") {
+          gh release create $tag $asset --title "TSO Client Fork $tag" --notes $notes --prerelease
+        }
         else {
-          gh release create $tag $asset --title "TSO Client Fork — Windows (12.08.2026)" --notes $notes
+          gh release create $tag $asset --title "TSO Client Fork $tag" --notes $notes
         }
