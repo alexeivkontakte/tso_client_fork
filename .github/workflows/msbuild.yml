@@ -31,7 +31,7 @@ jobs:
     - name: Prepare TSO Client Fork build
       shell: pwsh
       run: |
-        Copy-Item -LiteralPath "client_upstream.swf" -Destination "files/content/client.swf" -Force
+        Copy-Item -LiteralPath "client_upstream.swf" -Destination "client/files/content/client.swf" -Force
 
         $sourcePath = "client/Main.xaml.cs"
         $source = [System.IO.File]::ReadAllText($sourcePath)
